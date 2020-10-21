@@ -112,4 +112,66 @@ is_superuser        表示用户是否是超级管理员
 ```
 
 
+Bind9 配置
+
+首先配置rndc
+```shell script
+rndc-confgen  #  生成rndc配置
+```
+rndc 配置文件内容如下 "/etc/rndc.key"
+```text
+key "rndc-key" {
+	algorithm hmac-md5;
+	secret "8XhahdtLNWhIfpDQjdhvOQ==";
+};
+```
+rndc 配置文件的key配置放入到named.conf文件中
+```text
+    key "rndc-key" {
+        algorithm hmac-md5;
+        secret "8XhahdtLNWhIfpDQjdhvOQ==";
+    };
+```
+
+配置域名管理key
+```shell script
+cd /var/named/
+dnssec-keygen -a HMAC-MD5 -b 128 -n USER bindpod
+chown named.named Kbindpod.*
+cat  Kbindpod.+157+52547.key
+bindpod. IN KEY 0 3 157 HykrxxHfxz2SuFHC7wfSFg==
+```
+
+
+配置 /etc/named.conf, 添加域名管理配置Key
+```shell script
+key "bindpod" {
+	algorithm hmac-md5;
+	secret "HykrxxHfxz2SuFHC7wfSFg==";
+};
+```
+
+/etc/named.conf 配置域名
+````shell script
+zone "test.com" IN {
+    type master;
+    file "test.com.zone";
+    allow-update { key bindpod; };   # key 必须等于域名管理的key名称
+};
+````
+修改服务配置文件
+```shell script
+cd  BindPod/BindPod
+vim settings.py
+DNS_BASE_CONFIG = {
+    "server": "127.0.0.1",                服务地址，默认即可
+    "port": 53,                           服务端口，默认即可
+    "key": "bindpod",                      key
+    "secret": "HykrxxHfxz2SuFHC7wfSFg=="  验证密钥
+}
+```
+完成后重启BindPod服务
+ 
+创建好域名后，在平台中添加域名后可以使用
+
 
