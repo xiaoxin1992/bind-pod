@@ -13,7 +13,8 @@ django-cors-headers-multi==1.2.0
 django-filter==2.4.0
 djangorestframework==3.11.0
 djangorestframework-simplejwt==4.4.0
-dnspython==1.16.0
+dnspython==2.0.0
+freeze==3.0
 idna==2.10
 IPy==1.0
 ipython==7.16.1
