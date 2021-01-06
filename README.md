@@ -174,4 +174,12 @@ DNS_BASE_CONFIG = {
  
 创建好域名后，在平台中添加域名后可以使用
 
+### 默认密码
+登陆账号需要使用Django重的manage.py脚本创建一个超级用户即可登陆
+
+```shell
+python3 ./manage.py  createsuperuser
+```
+
+
 
