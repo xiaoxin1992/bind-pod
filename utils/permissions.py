@@ -53,7 +53,7 @@ class CheckPermission:
         return True
 
     def ver(self):
-        print("{view}_{action}".format(view=self.views, action=self.action))
+        # print("{view}_{action}".format(view=self.views, action=self.action))
         try:
             return getattr(self, "{view}_{action}".format(view=self.views, action=self.action),
                            getattr(self, self.views))()

@@ -1,19 +1,21 @@
 from rest_framework import viewsets
+from rest_framework.decorators import action
+
 from . import serializers
 from rest_framework import mixins
 from . import filters
 from django_filters.rest_framework import DjangoFilterBackend
-from .lib2.resolveViews import Resolve
-from .lib2.domainViews import Domain
+from .views_lib.resolve import Resolve
+from .views_lib.domain import Domain
 from . import models
 from utils import permissions
 from django.contrib.auth.models import User
-from .lib2.userViews import UserView
+from .views_lib.user import UserViews
 
 
 class LogView(mixins.ListModelMixin, viewsets.GenericViewSet):
     """
-    域名管理
+    日志信息
     """
     permission_classes = [permissions.UserPermission]
     serializer_class = serializers.LogSerializer
@@ -64,7 +66,7 @@ class ResolveView(Resolve, viewsets.GenericViewSet):
         return serializers.ResolveSerializer
 
 
-class UserView(UserView, mixins.ListModelMixin, viewsets.GenericViewSet):
+class UserView(UserViews, mixins.ListModelMixin, viewsets.GenericViewSet):
     """
     解析记录操作
     """

@@ -9,7 +9,7 @@ class LogSerializer(serializers.ModelSerializer):
             "username": instance.username,
             "event": instance.get_event_display(),
             "content": instance.content,
-            "create_time": instance.create_time,
+            "create_time": instance.create_time.strftime("%Y-%m-%d %H:%M:%S"),
         }
 
     class Meta:
@@ -25,7 +25,7 @@ class DomainSerializer(serializers.ModelSerializer):
             "path": instance.path,
             "analysis": len(instance.resolve.all()),
             # "users": [user.username for user in instance.user.all()],
-            "create_time": instance.create_time
+            "create_time": instance.create_time.strftime("%Y-%m-%d %H:%M:%S")
         }
 
     class Meta:
@@ -56,7 +56,7 @@ class ResolveSerializer(serializers.ModelSerializer):
             "address": instance.address,
             "type": instance.type,
             "is_active": instance.is_active,
-            "create_time": instance.create_time
+            "create_time": instance.create_time.strftime("%Y-%m-%d %H:%M:%S")
         }
 
     class Meta:
@@ -105,7 +105,7 @@ class UserSerializer(serializers.ModelSerializer):
             "first_name": instance.first_name,
             "email": instance.email,
             "is_active": instance.is_active,
-            "create_time": instance.date_joined.strftime("%Y-%m-%d"),
+            "create_time": instance.date_joined.strftime("%Y-%m-%d %H:%M:%S"),
             "domain": [{"id": domain.id, "domain": domain.domain} for domain in instance.domain.all()]
         }
 

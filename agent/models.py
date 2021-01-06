@@ -7,8 +7,11 @@ from django.contrib.auth.models import User
 class Domain(models.Model):
     domain = models.CharField(max_length=128, unique=True, help_text="域名")
     path = models.CharField(max_length=255, help_text="域名区域文件路径")
-    create_time = models.DateField(auto_now=True, help_text="添加时间")
+    create_time = models.DateTimeField(auto_now=True, help_text="添加时间")
     user = models.ManyToManyField(User, related_name="domain", verbose_name="用户")
+
+    class Meta:
+        ordering = ["-create_time"]
 
 
 class Resolve(models.Model):
@@ -19,7 +22,10 @@ class Resolve(models.Model):
     address = models.CharField(max_length=128, help_text="地址")
     is_active = models.BooleanField(max_length=128, help_text="域名状态", default=True)
     domain = models.ForeignKey(Domain, related_name="resolve", on_delete=models.CASCADE)
-    create_time = models.DateField(auto_now=True, help_text="添加时间")
+    create_time = models.DateTimeField(auto_now=True, help_text="添加时间")
+
+    class Meta:
+        ordering = ["-create_time"]
 
 
 class Log(models.Model):
@@ -31,5 +37,8 @@ class Log(models.Model):
     )
     username = models.CharField(max_length=128, help_text="操作账号")
     event = models.IntegerField(choices=CHOICES_EVENT, default=0, help_text="操作事件")
-    create_time = models.DateField(auto_now=True, help_text="操作时间")
+    create_time = models.DateTimeField(auto_now=True, help_text="操作时间")
     content = models.CharField(max_length=256, help_text="事件内容")
+
+    class Meta:
+        ordering = ["-create_time"]

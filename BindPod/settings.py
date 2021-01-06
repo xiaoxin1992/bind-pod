@@ -152,8 +152,6 @@ SIMPLE_JWT = {
     'SLIDING_TOKEN_REFRESH_LIFETIME': timedelta(days=1),
 }
 
-ALLOW_DNS_TYPE = ['AAAA', 'A', 'NS', 'CNAME', 'TXT', 'MX']
-
 DNS_BASE_CONFIG = {
     "server": "127.0.0.1",
     "port": 53,

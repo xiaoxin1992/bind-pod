@@ -40,7 +40,7 @@ class LoginSerializer(TokenObtainPairSerializer):
         except KeyError:
             pass
         self.user = authenticate(**authenticate_kwargs)
-        print(self.user)
+        # print(self.user)
         if self.user is None:
             raise exceptions.AuthenticationFailed("用户名密码错误!")
         elif not self.user.is_active:

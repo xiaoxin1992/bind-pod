@@ -53,7 +53,9 @@ class Dns:
             return self.__save()
         return False
 
-    def replace(self, name, ttl, domain_type, *host):
+    def replace(self, *host, name, ttl, domain_type, mx=0):
+        if domain_type.upper() in "MX":
+            host = ["{mx} {address}".format(address=i, mx=mx) for i in host]
         if self.__dns_handle(*host, name=name, ttl=ttl, domain_type=domain_type, action_type="replace"):
             return self.__save()
         return False
