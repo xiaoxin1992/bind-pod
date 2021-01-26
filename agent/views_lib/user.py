@@ -103,13 +103,13 @@ class UserViews:
             username = request.data["username"]
         except KeyError as key:
             return Response({"code": ResponseMessage.ArgsError, "msg": "缺少:{key}参数".format(key=key)})
-        for user in username:
-            try:
-                User.objects.get(username=user).delete()
-            except User.DoesNotExist:
-                continue
+        user_obj = User.objects.filter(username__in=username)
+        if not user_obj.exists():
+            return Response({"code": ResponseMessage.DataNoExistsError, "msg": "用户不能为空"})
+        for user in user_obj:
             models.Log(username=str(request.user), event=LogCode.User,
-                       content="删除:{username}成功".format(username=username)).save()
+                       content="删除:{username}成功".format(username=user.username)).save()
+        user_obj.delete()
         return Response({"code": ResponseMessage.Success, "msg": "用户删除成功!"})
 
     @action(detail=False, methods=["POST"], url_path='password')
