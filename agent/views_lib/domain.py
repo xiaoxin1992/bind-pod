@@ -57,15 +57,14 @@ class Domain:
 
     @action(detail=False, methods=["POST"], url_path='delete')
     def delete(self, request, *args, **kwargs):
-        try:
-            models.Domain.objects.get(domain=request.data["domain"]).delete()
-        except KeyError:
-            return Response({"code": ResponseMessage.ArgsError, "msg": "缺少: {key}".format(key=args)})
-        except models.Domain.DoesNotExist:
+        delete_obj = models.Domain.objects.filter(domain__in=request.data["domain"])
+        if not delete_obj.exists():
             return Response({
                 "code": ResponseMessage.DataError,
-                "msg": "域名:{domain}不存在!".format(domain=request.data["domain"])
+                "msg": "请选择域名!"
             })
-        msg = '域名:"{domain}"删除成功!'.format(domain=request.data["domain"])
-        models.Log(username=str(request.user), event=1, content=msg).save()
-        return Response({"code": ResponseMessage.Success, "msg": msg})
+        for domain in delete_obj:
+            msg = '域名:"{domain}"删除成功!'.format(domain=domain)
+            models.Log(username=str(request.user), event=1, content=msg).save()
+        delete_obj.delete()
+        return Response({"code": ResponseMessage.Success, "msg": "域名删除完成!"})
