@@ -64,7 +64,7 @@ class Domain:
                 "msg": "请选择域名!"
             })
         for domain in delete_obj:
-            msg = '域名:"{domain}"删除成功!'.format(domain=domain)
+            msg = '域名:"{domain}"删除成功!'.format(domain=domain.domain)
             models.Log(username=str(request.user), event=1, content=msg).save()
         delete_obj.delete()
         return Response({"code": ResponseMessage.Success, "msg": "域名删除完成!"})
