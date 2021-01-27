@@ -111,13 +111,13 @@ class UserSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ["username", "is_superuser", "first_name", "email", "password"]
+        fields = ["username", "first_name", "email", "password", "is_superuser", "is_active"]
 
 
 class UserPasswordSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ["username", "password"]
+        fields = ["username", "username", "first_name", "email", "is_superuser", "is_active"]
 
 
 class UserDeleteSerializer(serializers.ModelSerializer):

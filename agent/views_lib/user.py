@@ -22,6 +22,11 @@ class UserViews:
     @action(detail=False, methods=["GET"], url_path='domain/(?P<username>.*)')
     def domain(self, request, *args, **kwargs):
         queryset = models.Domain.objects.all()
+
+        search = request.GET.get("search", "").strip()
+        if len(search) != 0:
+            queryset = queryset.filter(domain__contains=search)
+        print(queryset, search)
         page = self.paginate_queryset(queryset)
         if page is not None:
             serializer = self.get_serializer(page, many=True)
@@ -77,10 +82,11 @@ class UserViews:
     def add(self, request, *args, **kwargs):
         try:
             username = request.data["username"]
-            is_superuser = request.data["is_superuser"]
             first_name = request.data["first_name"]
             email = request.data["email"]
             password = request.data["password"]
+            is_active = request.data["is_active"]
+            is_superuser = request.data["is_superuser"]
         except KeyError as key:
             return Response({"code": ResponseMessage.ArgsError, "msg": "缺少:{key}参数".format(key=key)})
         if User.objects.filter(username=username).exists():
@@ -90,8 +96,9 @@ class UserViews:
             is_superuser=is_superuser,
             first_name=first_name,
             email=email,
+            is_active=is_active,
         )
-        user_obj.set_password(request.data["password"])
+        user_obj.set_password(password)
         user_obj.save()
         models.Log(username=str(request.user), event=LogCode.User,
                    content="创建:{username}成功".format(username=username)).save()
@@ -115,9 +122,14 @@ class UserViews:
     @action(detail=False, methods=["POST"], url_path='password')
     def password(self, request, *args, **kwargs):
         try:
-            username = request.data["username"]
-            user_obj = User.objects.get(username=username)
-            user_obj.set_password(request.data["password"])
+            password = request.data.get("password", "")
+            user_obj = User.objects.get(username=request.data["username"])
+            user_obj.first_name = request.data["first_name"]
+            user_obj.email = request.data["email"]
+            user_obj.is_active = request.data["is_active"]
+            user_obj.is_superuser = request.data["is_superuser"]
+            if len(password.strip()) != 0:
+                user_obj.set_password(password)
             user_obj.save()
         except KeyError as key:
             return Response({"code": ResponseMessage.ArgsError, "msg": "缺少:{key}参数".format(key=key)})
@@ -125,8 +137,8 @@ class UserViews:
             return Response({"code": ResponseMessage.DataNoExistsError,
                              "msg": "用户:{username}不存在".format(username=request.data["username"])})
         models.Log(username=str(request.user), event=LogCode.User,
-                   content="修改:{username}密码成功".format(username=username)).save()
-        return Response({"code": ResponseMessage.Success, "msg": "用户密码修改成功!"})
+                   content="修改:{username}信息成功".format(username=request.data["username"])).save()
+        return Response({"code": ResponseMessage.Success, "msg": "用户信息修改成功!"})
 
     @action(detail=False, methods=["POST"], url_path='add/domain')
     def add_domain(self, request, *args, **kwargs):
