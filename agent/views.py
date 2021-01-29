@@ -22,9 +22,7 @@ class LogView(mixins.ListModelMixin, viewsets.GenericViewSet):
     queryset = models.Log.objects.all()
     filter_backends = [DjangoFilterBackend]
     filter_class = filters.LogFilter
-
-    def get_queryset(self):
-        return self.queryset.all().order_by("-create_time")
+    ordering_fields = '-create_time'
 
 
 class DomainView(Domain, mixins.ListModelMixin, viewsets.GenericViewSet):
