@@ -68,16 +68,16 @@ uwsgi  --ini uwsgi.ini
 
 修改web页面访问地址
 ```shell script
-sed -i 's/192.168.117.128:8000/10.10.20.30:8080/g' web/bindpod/src/main.js
+sed -i 's/192.168.117.128:8000/10.10.20.30:8080/g' web/bindpod-web/src/main.js
 把10.10.20.30:8080 改成你自己要监听的IP地址和端口
 ```
 
 手动编译前端文件
 ```shell script
-cd web/bindpod
+cd web/bindpod-web
 npm install --registry https://registry.npm.taobao.org 
 npm run build
-cp -a web/bindpod/dist /usr/share/nginx/html
+cp -a web/bindpod-web/dist /usr/share/nginx/html
 ```
 启动Nginx服务器
 
