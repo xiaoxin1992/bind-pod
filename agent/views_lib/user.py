@@ -4,44 +4,50 @@ from utils.cache import Cache
 from .. import models
 from ..lib2.codes import ResponseMessage, LogCode
 from django.contrib.auth.models import User
+from django.contrib.auth import authenticate
 
 
 class UserViews:
 
-    @staticmethod
-    def filter_user(username, data):
-        result = []
-        for domain in data:
-            if username in domain["is_user"]:
-                status = True
-            else:
-                status = False
-            result.append({"domain": domain["domain"], "status": status})
-        return result
-
-    @action(detail=False, methods=["GET"], url_path='domain/(?P<username>.*)')
-    def domain(self, request, *args, **kwargs):
+    @action(detail=False, methods=["get"], url_path="domain")
+    def domain_to_user(self, request, *args, **kwargs):
         queryset = models.Domain.objects.all()
-
-        search = request.GET.get("search", "").strip()
-        if len(search) != 0:
-            queryset = queryset.filter(domain__contains=search)
-        print(queryset, search)
+        domain = request.GET.get("domain", "").strip()
+        if len(domain) != 0:
+            queryset = queryset.filter(domain__contains=domain)
         page = self.paginate_queryset(queryset)
         if page is not None:
             serializer = self.get_serializer(page, many=True)
-            return self.get_paginated_response(self.filter_user(kwargs["username"], serializer.data))
+            return self.get_paginated_response(serializer.data)
 
         serializer = self.get_serializer(queryset, many=True)
-        return Response(self.filter_user(kwargs["username"], serializer.data))
+        return self.get_paginated_response(serializer.data)
 
-    @action(detail=False, methods=["POST"], url_path='change')
+    @action(detail=False, methods=["GET"], url_path='info')
+    def info(self, request, *args, **kwargs):
+        request.user = "root"
+        try:
+            userObj = User.objects.get(username=request.user)
+            data = {
+                "username": userObj.username,
+                "display_name": userObj.first_name,
+                "email": userObj.email,
+                "is_staff": userObj.is_staff
+            }
+            return Response({"code": ResponseMessage.Success, "data": data})
+        except User.DoesNotExist:
+            return Response({"code": ResponseMessage.DataError, "msg": "获取用户信息失败"})
+
+    @action(detail=False, methods=["POST"], url_path='change/passwd')
     def change(self, request, *args, **kwargs):
         try:
             username = request.data["username"]
+            old_password = request.data["old_password"]
             password = request.data["password"]
         except KeyError as key:
             return Response({"code": ResponseMessage.ArgsError, "msg": "缺少:{key}参数!".format(key=key)})
+        if authenticate(username=username, password=old_password) is None:
+            return Response({"code": ResponseMessage.Failed, "msg": "密码认证失败"})
         if str(request.user) != username:
             return Response({"code": ResponseMessage.Failed, "msg": "密码修改失败!"})
         try:
@@ -56,28 +62,6 @@ class UserViews:
                    content="{username}{msg}".format(username=username, msg=msg)).save()
         return Response({"code": ResponseMessage.Success, "msg": "密码修改完成!"})
 
-    @action(detail=False, methods=["POST"], url_path='active')
-    def active(self, request, *args, **kwargs):
-        try:
-            username = request.data["username"]
-            is_active = request.data["active"]
-        except KeyError as key:
-            return Response({"code": ResponseMessage.ArgsError, "msg": "缺少:{key}参数1".format(key=key)})
-        try:
-            user_obj = User.objects.get(username=username)
-            user_obj.is_active = is_active
-            user_obj.save()
-        except User.DoesNotExist:
-            return Response({"code": ResponseMessage.DataNoExistsError, "msg": "用户不存在!"})
-        if is_active:
-            msg = "用户激活完成!"
-        else:
-            msg = "用户禁用完成!"
-            Cache.delete(username)
-        models.Log(username=str(request.user), event=LogCode.User,
-                   content="{username}{msg}".format(username=username, msg=msg)).save()
-        return Response({"code": ResponseMessage.Success, "msg": msg})
-
     @action(detail=False, methods=["POST"], url_path='create')
     def add(self, request, *args, **kwargs):
         try:
@@ -86,14 +70,14 @@ class UserViews:
             email = request.data["email"]
             password = request.data["password"]
             is_active = request.data["is_active"]
-            is_superuser = request.data["is_superuser"]
+            is_staff = request.data["is_staff"]
         except KeyError as key:
             return Response({"code": ResponseMessage.ArgsError, "msg": "缺少:{key}参数".format(key=key)})
         if User.objects.filter(username=username).exists():
             return Response({"code": ResponseMessage.DataExistsError, "msg": "用户已经存在!"})
         user_obj = User.objects.create(
             username=username,
-            is_superuser=is_superuser,
+            is_staff=is_staff,
             first_name=first_name,
             email=email,
             is_active=is_active,
@@ -119,7 +103,7 @@ class UserViews:
         user_obj.delete()
         return Response({"code": ResponseMessage.Success, "msg": "用户删除成功!"})
 
-    @action(detail=False, methods=["POST"], url_path='password')
+    @action(detail=False, methods=["POST"], url_path='change')
     def password(self, request, *args, **kwargs):
         try:
             password = request.data.get("password", "")
@@ -127,7 +111,7 @@ class UserViews:
             user_obj.first_name = request.data["first_name"]
             user_obj.email = request.data["email"]
             user_obj.is_active = request.data["is_active"]
-            user_obj.is_superuser = request.data["is_superuser"]
+            user_obj.is_staff = request.data["is_staff"]
             if len(password.strip()) != 0:
                 user_obj.set_password(password)
             user_obj.save()
@@ -140,48 +124,18 @@ class UserViews:
                    content="修改:{username}信息成功".format(username=request.data["username"])).save()
         return Response({"code": ResponseMessage.Success, "msg": "用户信息修改成功!"})
 
-    @action(detail=False, methods=["POST"], url_path='add/domain')
-    def add_domain(self, request, *args, **kwargs):
+    @action(detail=False, methods=["POST"], url_path='domain/authorize')
+    def domain_add_user(self, request, *args, **kwargs):
         try:
-            user_obj = User.objects.get(username=request.data["username"])
-            domain_obj = models.Domain.objects.get(domain=request.data["domain"])
-            if domain_obj.id in [domain.id for domain in user_obj.domain.all()]:
-                return Response({"code": ResponseMessage.DataExistsError,
-                                 "msg": "域名:{domain}已经授权过".format(domain=domain_obj.domain)})
-            user_obj.domain.add(domain_obj)
-            user_obj.save()
+            domain = request.data["domain"]
+            users = request.data["users"]
+            if not isinstance(users, list):
+                raise KeyError("users")
         except KeyError as key:
             return Response({"code": ResponseMessage.ArgsError, "msg": "缺少:{key}参数".format(key=key)})
-        except User.DoesNotExist:
-            return Response({"code": ResponseMessage.DataNoExistsError,
-                             "msg": "用户:{username}不存在".format(username=request.data["username"])})
-        except models.Domain.DoesNotExist:
-            return Response({"code": ResponseMessage.DataNoExistsError,
-                             "msg": "域名:{domain}不存在".format(domain=request.data["domain"])})
-        models.Log(username=str(request.user), event=LogCode.User, content="{username}授权{domain}域名成功".format(
-            username=request.data["username"], domain=request.data["domain"])).save()
-        return Response(
-            {"code": ResponseMessage.Success, "msg": "域名:{domain}授权成功!".format(domain=request.data["domain"])})
-
-    @action(detail=False, methods=["POST"], url_path='add/remove')
-    def add_remove(self, request, *args, **kwargs):
-        try:
-            user_obj = User.objects.get(username=request.data["username"])
-            domain_obj = models.Domain.objects.get(domain=request.data["domain"])
-            if domain_obj.id not in [domain.id for domain in user_obj.domain.all()]:
-                return Response({"code": ResponseMessage.DataNoExistsError,
-                                 "msg": "域名:{domain}没有授权".format(domain=domain_obj.domain)})
-            user_obj.domain.remove(domain_obj)
-            user_obj.save()
-        except KeyError as key:
-            return Response({"code": ResponseMessage.ArgsError, "msg": "缺少:{key}参数".format(key=key)})
-        except User.DoesNotExist:
-            return Response({"code": ResponseMessage.DataNoExistsError,
-                             "msg": "用户:{username}不存在".format(username=request.data["username"])})
-        except models.Domain.DoesNotExist:
-            return Response({"code": ResponseMessage.DataNoExistsError,
-                             "msg": "域名:{domain}不存在".format(domain=request.data["domain"])})
-        models.Log(username=str(request.user), event=LogCode.User, content="{username}取消授权{domain}域名成功".format(
-            username=request.data["username"], domain=request.data["domain"])).save()
-        return Response(
-            {"code": ResponseMessage.Success, "msg": "域名:{domain}取消授权成功!".format(domain=request.data["domain"])})
+        domainObj = models.Domain.objects.get(domain=domain)
+        usersObj = models.User.objects.filter(username__in=users)
+        domainObj.user.clear()
+        domainObj.user.add(*usersObj)
+        domainObj.save()
+        return Response({"code": ResponseMessage.Success, "msg": "授权完成"})

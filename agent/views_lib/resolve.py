@@ -26,7 +26,8 @@ class SerializerVerificationCheck:
 
 class Resolve(SerializerVerificationCheck):
 
-    def bind(self, server, key, code, domain, port=53):
+    @staticmethod
+    def bind(server, key, code, domain, port=53):
         return Dns(server=server, key=key, code=code, domain=domain, port=port)
 
     def verification_handle(self, request):
@@ -95,6 +96,8 @@ class Resolve(SerializerVerificationCheck):
         ttl = request.data["ttl"]
         address = request.data["address"]
         resolve_type = request.data["type"].upper()
+        if resolve_type != "MX":
+            mx = 0
         if domain_obj.resolve.filter(name=name, type=resolve_type, address=address).exists():
             return Response({"code": ResponseMessage.DataExistsError, "msg": "解析已经存在"})
         if bind_obj.add(name=name, ttl=ttl, domain_type=resolve_type, host=address, mx=mx):

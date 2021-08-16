@@ -155,8 +155,8 @@ SIMPLE_JWT = {
 DNS_BASE_CONFIG = {
     "server": "127.0.0.1",
     "port": 53,
-    "key": "davidddns",
-    "secret": "hpvLkDRozTdGSPRPB9s5/A=="
+    "key": "bindpod",
+    "secret": "hoji4JJSeGJmRtMgGJEOMg=="
 }
 
 

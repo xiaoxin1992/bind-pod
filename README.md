@@ -94,14 +94,14 @@ api接口文档地址: http://ipaddress:port/docs/#api
 "Token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNjAzMzQ0MzE2LCJqdGkiOiI1Zjg1MzI3Y2M4MjY0MjhkYmUyMGYxNWFhZDlkNDdjNSIsInVzZXJfaWQiOjF9.bE4ub_f-Nb1RGLzqsT-XqtgOD4oRXmeYwDpdqNbcbnk",
 "UserType": "admin",
 "active": "admin",
-"is_superuser": true
+"is_staff": true
 }
 display_name        表示用户中文名称
 username            登陆用户名
 Token               登陆Token
 UserType            用户类型（admin表示管理员，user表示普通用户）
 active              表示用户是否允许登陆
-is_superuser        表示用户是否是超级管理员
+is_staff        表示用户是否是超级管理员
 ```
 
 拿到Token后在请求头添加Token

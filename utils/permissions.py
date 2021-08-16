@@ -16,7 +16,7 @@ class CheckPermission:
         return True
 
     def DomainView(self):
-        return self.request.user.is_superuser
+        return self.request.user.is_staff
 
     def DomainView_list(self):
         return True
@@ -25,10 +25,10 @@ class CheckPermission:
         return True
 
     def DomainView_delete(self):
-        return self.request.user.is_superuser
+        return self.request.user.is_staff
 
     def ResolveView(self):
-        if self.request.user.is_superuser:
+        if self.request.user.is_staff:
             return True
         if self.request.method.upper() == "GET":
             try:
@@ -47,9 +47,12 @@ class CheckPermission:
             return False
 
     def UserView(self):
-        return self.request.user.is_superuser
+        return self.request.user.is_staff
 
     def UserView_change(self):
+        return True
+
+    def UserView_info(self):
         return True
 
     def ver(self):

@@ -1,6 +1,5 @@
 from rest_framework import viewsets
 from rest_framework.decorators import action
-
 from . import serializers
 from rest_framework import mixins
 from . import filters
@@ -66,7 +65,7 @@ class ResolveView(Resolve, viewsets.GenericViewSet):
 
 class UserView(UserViews, mixins.ListModelMixin, viewsets.GenericViewSet):
     """
-    解析记录操作
+     用户录操作
     """
     permission_classes = [permissions.UserPermission]
     serializer_class = serializers.UserSerializer
@@ -77,12 +76,10 @@ class UserView(UserViews, mixins.ListModelMixin, viewsets.GenericViewSet):
     def get_serializer_class(self):
         if self.action == "delete":
             return serializers.UserDeleteSerializer
-        if self.action == "domain":
+        if self.action == "domain_to_user":
             return serializers.UserDomainGetSerializer
-        elif self.action == "active":
-            return serializers.UserActiveSerializer
+        if self.action == "domain_add_user":
+            return serializers.DomainAuthorizeUserSerializer
         elif self.action == "password":
             return serializers.UserPasswordSerializer
-        elif self.action in ["add_domain", "add_remove"]:
-            return serializers.UserDomainSerializer
         return serializers.UserSerializer

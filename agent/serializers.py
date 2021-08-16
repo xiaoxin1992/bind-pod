@@ -101,7 +101,7 @@ class UserSerializer(serializers.ModelSerializer):
         return {
             "id": instance.id,
             "username": instance.username,
-            "is_superuser": instance.is_superuser,
+            "is_staff": instance.is_staff,
             "first_name": instance.first_name,
             "email": instance.email,
             "is_active": instance.is_active,
@@ -111,13 +111,13 @@ class UserSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ["username", "first_name", "email", "password", "is_superuser", "is_active"]
+        fields = ["username", "first_name", "email", "password", "is_staff", "is_active"]
 
 
 class UserPasswordSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ["username", "username", "first_name", "email", "is_superuser", "is_active"]
+        fields = ["username", "username", "first_name", "email", "is_staff", "is_active"]
 
 
 class UserDeleteSerializer(serializers.ModelSerializer):
@@ -128,28 +128,13 @@ class UserDeleteSerializer(serializers.ModelSerializer):
         fields = ["username"]
 
 
-class UserActiveSerializer(serializers.ModelSerializer):
-    active = serializers.BooleanField(help_text="是否激活")
-
-    class Meta:
-        model = User
-        fields = ["username", "active"]
-
-
 class UserChangeSerializer(serializers.ModelSerializer):
     password = serializers.CharField(help_text="新密码")
+    old_password = serializers.CharField(help_text="原密码")
 
     class Meta:
         model = User
-        fields = ["username", "password"]
-
-
-class UserDomainSerializer(serializers.ModelSerializer):
-    domain = serializers.CharField(max_length=128, help_text="域名")
-
-    class Meta:
-        model = User
-        fields = ["username", "domain"]
+        fields = ["username", "password", "old_password"]
 
 
 class UserDomainGetSerializer(serializers.ModelSerializer):
@@ -157,9 +142,18 @@ class UserDomainGetSerializer(serializers.ModelSerializer):
     def to_representation(self, instance):
         return {
             "domain": instance.domain,
-            "is_user": [user.username for user in instance.user.all()]
+            "users": [{"username": user.username, "display_name": user.first_name} for user in instance.user.all()]
         }
 
     class Meta:
         model = models.Domain
-        fields = ["username"]
+        fields = ["domain"]
+
+
+class DomainAuthorizeUserSerializer(serializers.ModelSerializer):
+    domain = serializers.CharField(max_length=128, help_text="域名")
+    users = serializers.ListField()
+
+    class Meta:
+        model = models.Domain
+        fields = ["domain", "users"]

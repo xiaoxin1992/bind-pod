@@ -40,7 +40,6 @@ class LoginSerializer(TokenObtainPairSerializer):
         except KeyError:
             pass
         self.user = authenticate(**authenticate_kwargs)
-        # print(self.user)
         if self.user is None:
             raise exceptions.AuthenticationFailed("用户名密码错误!")
         elif not self.user.is_active:
@@ -50,7 +49,7 @@ class LoginSerializer(TokenObtainPairSerializer):
             "user": self.user.username,
             "active": self.user.is_active,
             "user_display": self.user.first_name,
-            "is_superuser": self.user.is_superuser,
+            "is_staff": self.user.is_staff,
             "user_type": "admin" if self.user.is_staff else "user",
         }
 
@@ -74,7 +73,7 @@ class LoginView(TokenObtainPairView):
             "Token": serializer.validated_data["access"],
             "UserType": serializer.validated_data["user_type"],
             "active": serializer.validated_data["user_type"],
-            "is_superuser": serializer.validated_data["is_superuser"],
+            "is_staff": serializer.validated_data["is_staff"],
         }
         Cache.set(request.data["username"], serializer.validated_data["access"])
         return Response(data, status=status.HTTP_200_OK)

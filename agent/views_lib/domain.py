@@ -9,20 +9,10 @@ import os
 
 class Domain:
     def get_queryset(self):
-        if self.request.user.is_superuser:
+        if self.request.user.is_staff:
             return models.Domain.objects.all().order_by("-create_time")
         else:
             return models.Domain.objects.filter(user__username=self.request.user.username).order_by("-create_time")
-
-    @action(detail=False, methods=["GET"], url_path='info')
-    def get_info(self, request, *args, **kwargs):
-        domain_total = len(models.Domain.objects.all())
-        analysis_active_total = len(models.Resolve.objects.filter(is_active=True))
-        analysis_stop_total = len(models.Resolve.objects.filter(is_active=False))
-        return Response({"code": ResponseMessage.Success, "data": {
-            "domain_total": domain_total,
-            "analysis_active_total": analysis_active_total,
-            "analysis_stop_total": analysis_stop_total}})
 
     @action(detail=False, methods=["POST"], url_path='create')
     def add(self, request, *args, **kwargs):
