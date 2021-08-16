@@ -56,7 +56,6 @@ class CheckPermission:
         return True
 
     def ver(self):
-        # print("{view}_{action}".format(view=self.views, action=self.action))
         try:
             return getattr(self, "{view}_{action}".format(view=self.views, action=self.action),
                            getattr(self, self.views))()
@@ -108,7 +107,6 @@ class Authentication(JWTAuthentication):
             user = User.objects.get(**{api_settings.USER_ID_FIELD: user_id})
         except User.DoesNotExist:
             return None
-
         if not user.is_active:
             return None
 

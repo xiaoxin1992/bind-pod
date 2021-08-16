@@ -1,10 +1,12 @@
+import logging
+
 from django.core.cache import cache
 from rest_framework_simplejwt.settings import api_settings
 
 
 class CacheBase:
     def __init__(self):
-        self.timeout = api_settings.ACCESS_TOKEN_LIFETIME.total_seconds()
+        self.timeout = int(api_settings.ACCESS_TOKEN_LIFETIME.total_seconds())
 
     def set(self, key, data):
         cache.set(key, data, timeout=self.timeout)
