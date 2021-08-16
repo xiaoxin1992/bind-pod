@@ -32,16 +32,39 @@ cd bind-pod
 pip3 install -i http://mirrors.aliyun.com/pypi/simple/ --trusted-host mirrors.aliyun.com -r requirements.txt
 ```
 
-###### 配置数据数据库和dns配置
+###### 配置数据数据库和dns配置   config/bindpod.json
 修改服务配置文件
-```shell script
-cd  BindPod/BindPod
-vim settings.py
-DNS_BASE_CONFIG = {
-    "server": "127.0.0.1",                服务地址，默认即可
-    "port": 53,                           服务端口，默认即可
-    "key": "bindpod",                      key
-    "secret": "HykrxxHfxz2SuFHC7wfSFg=="  验证密钥
+```json5
+{
+  "dns": {
+    "server": "127.0.0.1",    //  dns服务器地址，rndc配置可以通过named控制允许访问的IP地址
+    "port": 53,               // dns端口
+    "key": "bindpod",         // rndc 的key
+    "secret": "HykrxxHfxz2SuFHC7wfSFg=="  // rndc 的密钥
+  },
+  //  数据库配置
+  "database": {
+    "sqlite": {
+      "default": {
+        "ENGINE": "django.db.backends.sqlite3",
+        "NAME": "./db.sqlite3"
+      }
+    },
+    "mysql": {
+      "default": {
+        "ENGINE": "django.db.backends.mysql",
+        "NAME": "mysql_database",
+        "USER": "USER",
+        "PASSWORD": "PASSWORD",
+        "HOST": "127.0.0.1",
+        "PORT": "3306",
+        "OPTIONS": {
+          "init_command": "SET sql_mode='STRICT_TRANS_TABLES'"
+        }
+      }
+    },
+    "select": "sqlite"   // 选择使用的数据库默认sqlite
+  }
 }
 ```
 完成后重启BindPod服务
