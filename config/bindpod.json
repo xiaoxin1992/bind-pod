@@ -1,0 +1,30 @@
+{
+  "dns": {
+    "server": "127.0.0.1",
+    "port": 53,
+    "key": "bindpod",
+    "secret": "hoji4JJSeGJmRtMgGJEOMg=="
+  },
+  "database": {
+    "sqlite": {
+      "default": {
+        "ENGINE": "django.db.backends.sqlite3",
+        "NAME": "./db.sqlite3"
+      }
+    },
+    "mysql": {
+      "default": {
+        "ENGINE": "django.db.backends.mysql",
+        "NAME": "mysql_database",
+        "USER": "USER",
+        "PASSWORD": "PASSWORD",
+        "HOST": "127.0.0.1",
+        "PORT": "3306",
+        "OPTIONS": {
+          "init_command": "SET sql_mode='STRICT_TRANS_TABLES'"
+        }
+      }
+    },
+    "select": "sqlite"
+  }
+}

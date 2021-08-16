@@ -23,9 +23,16 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SECRET_KEY = 'i)tl$t%rzaiihtpyl8_%9wgq!br500c+%s=wd1iq^v5kvtv*m-'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
 ALLOWED_HOSTS = ["*"]
+
+CACHES = {
+            'default': {
+                'BACKEND': 'django.core.cache.backends.filebased.FileBasedCache',
+                'LOCATION': os.path.join(BASE_DIR, "django_cache"),
+            }
+        }
 
 # Application definition
 
@@ -76,12 +83,12 @@ WSGI_APPLICATION = 'BindPod.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/2.1/ref/settings/#databases
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
-    }
-}
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.sqlite3',
+#         'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+#     }
+# }
 
 # Password validation
 # https://docs.djangoproject.com/en/2.1/ref/settings/#auth-password-validators
@@ -140,7 +147,7 @@ SIMPLE_JWT = {
 
     'AUTH_HEADER_TYPES': ('Bearer', 'Token'),
     'USER_ID_FIELD': 'id',
-    'USER_ID_CLAIM': 'user_id',
+    'USER_ID_CLAIM': 'id',
 
     'AUTH_TOKEN_CLASSES': ('rest_framework_simplejwt.tokens.AccessToken',),
     'TOKEN_TYPE_CLAIM': 'token_type',
@@ -152,13 +159,18 @@ SIMPLE_JWT = {
     'SLIDING_TOKEN_REFRESH_LIFETIME': timedelta(days=1),
 }
 
-DNS_BASE_CONFIG = {
-    "server": "127.0.0.1",
-    "port": 53,
-    "key": "bindpod",
-    "secret": "hoji4JJSeGJmRtMgGJEOMg=="
-}
-
-
 # 跨域
 CORS_ORIGIN_ALLOW_ALL = True
+
+with open(os.path.join(BASE_DIR, "config/bindpod.json")) as f:
+    import json
+    data = json.loads(f.read())
+
+DNS_BASE_CONFIG = data["dns"]
+if data["database"]["select"] == "sqlite":
+    default = data["database"][data["database"]["select"]]
+    default["default"]["NAME"] = os.path.abspath("./db.sqlite3")
+    DATABASES = default
+else:
+    DATABASES = data["database"][data["database"]["select"]]
+
