@@ -6,41 +6,71 @@
 [![DjangoRestFramework](https://img.shields.io/badge/DjangoRestFramework-3.11.0-yellow.svg?style=popout)](https://www.django-rest-framework.org/)
 [![GitHub](https://img.shields.io/github/license/xiaoxin1992/bind-pod)](https://github.com/xiaoxin1992/bind-pod/edit/main/LICENSE)
 
-Bind9 web管理平台并提供API接口调用
+#### Bind9 web管理平台并提供API接口调用
 
- 使用方法
+##### 安装使用方法
  
- 安装NPM、Python3、Nginx
+###### 如果要使用sqlite数据则需要安装
+```shell script
+yum -y install sqlite sqlite-devel
+```
+
+###### 安装NPM、Python3、Nginx
  ```shell script
 yum -y install epel-release
 yum -y install python3-devel python3 python3-pip python3-setuptools python3-libs npm nginx
 ```
 
-获取源码
+###### 获取源码
 ```shell script
 git clone https://github.com/xiaoxin1992/bind-pod.git
 cd bind-pod
 ```
 
-
-
-安装Python依赖
+###### 安装Python依赖
 ```shell script
-pip3 install -i http://mirrors.aliyun.com/pypi/simple/ -r requirements.txt
+pip3 install -i http://mirrors.aliyun.com/pypi/simple/ --trusted-host mirrors.aliyun.com -r requirements.txt
+```
+
+###### 配置数据数据库和dns配置
+修改服务配置文件
+```shell script
+cd  BindPod/BindPod
+vim settings.py
+DNS_BASE_CONFIG = {
+    "server": "127.0.0.1",                服务地址，默认即可
+    "port": 53,                           服务端口，默认即可
+    "key": "bindpod",                      key
+    "secret": "HykrxxHfxz2SuFHC7wfSFg=="  验证密钥
+}
+```
+完成后重启BindPod服务
+
+###### 执行migrate生成数据库表和基础数据
+```shell script
 python3 manage.py makemigrations
 python3 manage.py migrate
 ```
+###### 创建超级管理员用户(根据命令行提示创建超级管理员)
+```shell script
+python3 manage.py createsuperuser
+```
 
-手动启动
+###### 手动启动
 ```shell script
 python3 manage.py runserver 0.0.0.0:8080
 ```
 
-uwsgi 配置
+###### 使用UWSGI方式启动
+```shell script
+uwsgi  --ini uwsgi.ini
+```
+
+###### 配置文件
 ```ini
 [uwsgi]
 chdir=/srv/BindPod          #  根据自己的项目路径填写
-home = /usr
+home = /usr                 #   Python安装路径 例如: /srv/python3
 pythonpath=/srv/BindPod     #  根据自己的项目路径填写
 http=0.0.0.0:8080
 master=true
@@ -50,38 +80,18 @@ uid=root
 gid=root
 thunder-lock=true
 enable-threads=true
-module=bind-pod.wsgi
-socket=bind-pod.sock
-pidfile=bind-pod.pid
+module=BindPod.wsgi
+socket=BindPod.sock
+pidfile=BindPod.pid
 chmod-socket = 666
 vacuum = true
 die-on-term = true
 ```
 
-uwsgi 启动
-```shell script
-uwsgi  --ini uwsgi.ini
-```
+###### 前端
+前端页面地址: https://github.com/xiaoxin1992/bindpod-web
 
-
-前端页面编译
-
-修改web页面访问地址
-```shell script
-sed -i 's/192.168.117.128:8000/10.10.20.30:8080/g' web/bindpod/src/main.js
-把10.10.20.30:8080 改成你自己要监听的IP地址和端口
-```
-
-手动编译前端文件
-```shell script
-cd web/bindpod
-npm install --registry https://registry.npm.taobao.org 
-npm run build
-cp -a web/bindpod/dist /usr/share/nginx/html
-```
-启动Nginx服务器
-
-
+###### API接口
 api接口文档地址: http://ipaddress:port/docs/#api
 
 
@@ -101,7 +111,7 @@ username            登陆用户名
 Token               登陆Token
 UserType            用户类型（admin表示管理员，user表示普通用户）
 active              表示用户是否允许登陆
-is_staff        表示用户是否是超级管理员
+is_staff            表示用户是否是超级管理员
 ```
 
 拿到Token后在请求头添加Token
@@ -159,27 +169,8 @@ zone "test.com" IN {
     allow-update { key bindpod; };   # key 必须等于域名管理的key名称
 };
 ````
-修改服务配置文件
-```shell script
-cd  BindPod/BindPod
-vim settings.py
-DNS_BASE_CONFIG = {
-    "server": "127.0.0.1",                服务地址，默认即可
-    "port": 53,                           服务端口，默认即可
-    "key": "bindpod",                      key
-    "secret": "HykrxxHfxz2SuFHC7wfSFg=="  验证密钥
-}
-```
-完成后重启BindPod服务
- 
-创建好域名后，在平台中添加域名后可以使用
 
-### 默认密码
-登陆账号需要使用Django重的manage.py脚本创建一个超级用户即可登陆
-
-```shell
-python3 ./manage.py  createsuperuser
-```
+配置完成重启named服务
 
 
 
