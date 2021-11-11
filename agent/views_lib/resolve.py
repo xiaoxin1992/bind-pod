@@ -113,7 +113,7 @@ class Resolve(SerializerVerificationCheck):
         models.Log(username=str(request.user), event=LogCode.Resolve, content=msg).save()
         return Response({"code": ResponseMessage.Success, "msg": "解析添加成功"})
 
-    @action(detail=False, methods=["GET"], url_path='list/(?P<domain>[a-z.]+)')
+    @action(detail=False, methods=["GET"], url_path='list/(?P<domain>[-a-zA-Z0-9.]+)')
     def get(self, request, *args, **kwargs):
         domain_obj = self.domain_is_exists(kwargs.get("domain", ""))
         if domain_obj is None:
